@@ -1,0 +1,6 @@
+@GestaoDesignerMemorias.Api_HostAddress = http://localhost:5098
+
+GET {{GestaoDesignerMemorias.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
