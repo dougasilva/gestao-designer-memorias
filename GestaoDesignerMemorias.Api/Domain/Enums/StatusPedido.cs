@@ -1,4 +1,4 @@
-﻿namespace GestaoDesignerMemorias.Api.Domain.Enums
+﻿namespace GestaoDesignerMemorias.Domain.Enums
 {
     public enum StatusPedido
     {
