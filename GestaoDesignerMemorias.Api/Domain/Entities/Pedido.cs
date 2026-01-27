@@ -1,5 +1,4 @@
-﻿using GestaoDesignerMemorias.Api.Domain.Enums;
-using GestaoDesignerMemorias.Domain.Enums;
+﻿using GestaoDesignerMemorias.Domain.Enums;
 
 namespace GestaoDesignerMemorias.Domain.Entities
 {
