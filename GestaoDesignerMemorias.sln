@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoDesignerMemorias.Api", "GestaoDesignerMemorias.Api\GestaoDesignerMemorias.Api.csproj", "{E435DD69-0B4E-4F06-BFC2-58DA5AFC42B5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestaoDesignerMemorias.Tests", "GestaoDesignerMemorias.Tests\GestaoDesignerMemorias.Tests.csproj", "{8C542C1A-5359-4AB5-8FB2-980383D8690B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{E435DD69-0B4E-4F06-BFC2-58DA5AFC42B5}.Release|x64.Build.0 = Release|Any CPU
 		{E435DD69-0B4E-4F06-BFC2-58DA5AFC42B5}.Release|x86.ActiveCfg = Release|Any CPU
 		{E435DD69-0B4E-4F06-BFC2-58DA5AFC42B5}.Release|x86.Build.0 = Release|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Debug|x64.Build.0 = Debug|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Debug|x86.Build.0 = Debug|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Release|x64.ActiveCfg = Release|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Release|x64.Build.0 = Release|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Release|x86.ActiveCfg = Release|Any CPU
+		{8C542C1A-5359-4AB5-8FB2-980383D8690B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

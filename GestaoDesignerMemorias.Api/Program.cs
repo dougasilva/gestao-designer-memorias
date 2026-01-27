@@ -1,3 +1,4 @@
+using Application.Services;
 using GestaoDesignerMemorias.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -23,6 +24,10 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+
+//Scoped
+builder.Services.AddScoped<IMessageClassifier, RuleBasedMessageClassifier>();
+
 
 var app = builder.Build();
 

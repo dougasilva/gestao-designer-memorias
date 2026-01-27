@@ -1,4 +1,5 @@
-﻿using GestaoDesignerMemorias.Domain.Entities;
+﻿using Application.Services;
+using GestaoDesignerMemorias.Domain.Entities;
 using GestaoDesignerMemorias.Domain.Enums;
 using GestaoDesignerMemorias.DTOs.Webhooks;
 using GestaoDesignerMemorias.Infrastructure.Data;
@@ -12,17 +13,34 @@ namespace GestaoDesignerMemorias.Controllers;
 public class WebhooksController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IMessageClassifier _classifier;
+    private readonly ILogger<WebhooksController> _logger;
 
-    public WebhooksController(AppDbContext context)
+    public WebhooksController(
+        AppDbContext context,
+        IMessageClassifier classifier,
+        ILogger<WebhooksController> logger)
     {
         _context = context;
+        _classifier = classifier;
+        _logger = logger;
     }
 
-    // POST: api/webhooks/whatsapp
     [HttpPost("whatsapp")]
-    public async Task<IActionResult> ReceiveWhatsAppMessage(WhatsAppWebhookDto dto)
+    public async Task<IActionResult> ReceiveWhatsapp([FromBody] WhatsAppWebhookDto dto)
     {
-        // 1. Log da mensagem (sempre)
+        if (dto == null || string.IsNullOrWhiteSpace(dto.Mensagem))
+            return BadRequest("Mensagem inválida");
+
+        // 1️⃣ Classificar mensagem
+        var category = _classifier.Classify(dto.Mensagem);
+
+        _logger.LogInformation(
+            "Webhook WhatsApp | Telefone={Telefone} | Categoria={Categoria}",
+            dto.Telefone,
+            category);
+
+        // 2️⃣ Log da mensagem (auditável)
         var log = new MensagemWebhook
         {
             Id = Guid.NewGuid(),
@@ -30,10 +48,9 @@ public class WebhooksController : ControllerBase
             Conteudo = dto.Mensagem,
             RecebidoEm = DateTime.UtcNow
         };
-
         _context.MensagensWebhook.Add(log);
 
-        // 2. Cliente: busca ou cria
+        // 3️⃣ Buscar ou criar cliente
         var cliente = await _context.Clientes
             .FirstOrDefaultAsync(c => c.Telefone == dto.Telefone);
 
@@ -42,34 +59,72 @@ public class WebhooksController : ControllerBase
             cliente = new Cliente
             {
                 Id = Guid.NewGuid(),
-                Nome = dto.Nome ?? "Contato WhatsApp",
+                Nome = string.IsNullOrWhiteSpace(dto.Nome)
+                    ? "Contato WhatsApp"
+                    : dto.Nome,
                 Telefone = dto.Telefone
             };
-
             _context.Clientes.Add(cliente);
         }
 
-        // 3. Regra simples por palavra-chave
-        var mensagemLower = dto.Mensagem.ToLower();
-
-        if (mensagemLower.Contains("orçamento") || mensagemLower.Contains("orcamento"))
+        // 4️⃣ Decisão por categoria
+        switch (category)
         {
-            var pedido = new Pedido
-            {
-                Id = Guid.NewGuid(),
-                ClienteId = cliente.Id,
-                TipoEvento = "A definir",
-                ValorTotal = 0,
-                Status = StatusPedido.OrcamentoSolicitado,
-                StatusPagamento = StatusPagamento.Nenhum,
-                DataCriacao = DateTime.UtcNow
-            };
+            case MessageCategory.Orcamento:
+                CriarPedidoSeNaoExistir(cliente.Id, StatusPedido.OrcamentoSolicitado);
+                break;
 
-            _context.Pedidos.Add(pedido);
+            case MessageCategory.Pedido:
+                CriarPedidoSeNaoExistir(cliente.Id, StatusPedido.Prospecao);
+                break;
+
+            case MessageCategory.Suporte:
+                _logger.LogInformation(
+                    "Mensagem classificada como SUPORTE | Cliente={ClienteId}",
+                    cliente.Id);
+                break;
+
+            case MessageCategory.Duvida:
+                _logger.LogInformation(
+                    "Mensagem classificada como DUVIDA | Cliente={ClienteId}",
+                    cliente.Id);
+                break;
+
+            default:
+                _logger.LogInformation(
+                    "Mensagem classificada como OUTROS | Cliente={ClienteId}",
+                    cliente.Id);
+                break;
         }
 
         await _context.SaveChangesAsync();
 
-        return Ok(new { status = "recebido" });
+        return Ok(new
+        {
+            categoria = category.ToString()
+        });
+    }
+
+    private void CriarPedidoSeNaoExistir(Guid clienteId, StatusPedido status)
+    {
+        var existePedidoAberto = _context.Pedidos.Any(p =>
+            p.ClienteId == clienteId &&
+            p.Status == status);
+
+        if (existePedidoAberto)
+            return;
+
+        var pedido = new Pedido
+        {
+            Id = Guid.NewGuid(),
+            ClienteId = clienteId,
+            TipoEvento = "A definir",
+            ValorTotal = 0,
+            Status = status,
+            StatusPagamento = StatusPagamento.Nenhum,
+            DataCriacao = DateTime.UtcNow
+        };
+
+        _context.Pedidos.Add(pedido);
     }
 }
