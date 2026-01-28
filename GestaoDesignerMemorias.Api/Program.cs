@@ -29,8 +29,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IMessageClassifier, RuleBasedMessageClassifier>();
 builder.Services.AddScoped<IPedidoAutoService, PedidoAutoService>();
 builder.Services.AddScoped<BriefingRespostaService>();
-
-
+builder.Services.AddScoped<PedidoStatusService>();
 
 
 var app = builder.Build();
