@@ -8,6 +8,17 @@ namespace GestaoDesignerMemorias.Tests.Application.Services;
 
 public class BriefingRespostaServiceTests
 {
+    private readonly AppDbContext _context;
+    private readonly PedidoStatusService _pedidoStatusService;
+    private readonly BriefingRespostaService _service;
+
+    public BriefingRespostaServiceTests()
+    {
+        _context = CriarContextoEmMemoria();
+        _pedidoStatusService = new PedidoStatusService(_context);
+        _service = new BriefingRespostaService(_context, _pedidoStatusService);
+    }
+
     private static AppDbContext CriarContextoEmMemoria()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -17,12 +28,8 @@ public class BriefingRespostaServiceTests
         return new AppDbContext(options);
     }
 
-    [Fact]
-    public async Task RegistrarRespostaAsync_DeveSalvarRespostaNoBriefingItem()
+    private async Task<(Pedido pedido, BriefingItem briefingItem)> CriarPedidoComBriefingItemAsync()
     {
-        // Arrange
-        using var context = CriarContextoEmMemoria();
-
         var pedido = new Pedido
         {
             Id = Guid.NewGuid(),
@@ -38,14 +45,21 @@ public class BriefingRespostaServiceTests
             Tipo = BriefingItemType.Texto
         };
 
-        context.Pedidos.Add(pedido);
-        context.BriefingItens.Add(briefingItem);
-        await context.SaveChangesAsync();
+        _context.Pedidos.Add(pedido);
+        _context.BriefingItens.Add(briefingItem);
+        await _context.SaveChangesAsync();
 
-        var service = new BriefingRespostaService(context);
+        return (pedido, briefingItem);
+    }
+
+    [Fact]
+    public async Task RegistrarRespostaAsync_DeveSalvarRespostaNoBriefingItem()
+    {
+        // Arrange
+        var (_, briefingItem) = await CriarPedidoComBriefingItemAsync();
 
         // Act
-        var resultado = await service.RegistrarRespostaAsync(
+        var resultado = await _service.RegistrarRespostaAsync(
             briefingItem.Id,
             "Princesas"
         );
@@ -53,26 +67,28 @@ public class BriefingRespostaServiceTests
         // Assert
         Assert.True(resultado);
 
-        var itemSalvo = await context.BriefingItens
+        var itemSalvo = await _context.BriefingItens
             .FirstAsync(b => b.Id == briefingItem.Id);
 
         Assert.Equal("Princesas", itemSalvo.Resposta);
     }
 
     [Fact]
-    public async Task RegistrarRespostaAsync_DeveRetornarFalse_SeBriefingItemNaoExistir()
+    public async Task RegistrarRespostaAsync_DeveRetornarFalse_QuandoBriefingItemNaoExiste()
     {
         // Arrange
-        using var context = CriarContextoEmMemoria();
-        var service = new BriefingRespostaService(context);
+        var idInexistente = Guid.NewGuid();
 
         // Act
-        var resultado = await service.RegistrarRespostaAsync(
-            Guid.NewGuid(),
-            "Qualquer coisa"
+        var resultado = await _service.RegistrarRespostaAsync(
+            idInexistente,
+            "Qualquer resposta"
         );
 
         // Assert
         Assert.False(resultado);
     }
+
+    // Método auxiliar opcional: limpar o contexto entre testes (caso precise em cenários mais complexos)
+     [Fact] public void Dispose() => _context.Dispose();
 }

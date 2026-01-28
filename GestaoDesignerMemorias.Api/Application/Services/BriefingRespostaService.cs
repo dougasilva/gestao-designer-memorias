@@ -5,10 +5,12 @@ namespace Application.Services;
 public class BriefingRespostaService
 {
     private readonly AppDbContext _context;
+    private readonly PedidoStatusService _pedidoStatusService;
 
-    public BriefingRespostaService(AppDbContext context)
+    public BriefingRespostaService(AppDbContext context, PedidoStatusService pedidoStatusService)
     {
         _context = context;
+        _pedidoStatusService = pedidoStatusService;
     }
 
     public async Task<bool> RegistrarRespostaAsync(
@@ -24,6 +26,9 @@ public class BriefingRespostaService
         item.Resposta = resposta;
 
         await _context.SaveChangesAsync();
+
+        await _pedidoStatusService.AvaliarStatusAsync(item.PedidoId);
+
         return true;
     }
 }
