@@ -30,7 +30,7 @@ builder.Services.AddScoped<IMessageClassifier, RuleBasedMessageClassifier>();
 builder.Services.AddScoped<IPedidoAutoService, PedidoAutoService>();
 builder.Services.AddScoped<BriefingRespostaService>();
 builder.Services.AddScoped<PedidoStatusService>();
-
+builder.Services.AddScoped<PagamentoStatusService>();
 
 var app = builder.Build();
 
