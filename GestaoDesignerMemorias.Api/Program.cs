@@ -31,6 +31,7 @@ builder.Services.AddScoped<IPedidoAutoService, PedidoAutoService>();
 builder.Services.AddScoped<BriefingRespostaService>();
 builder.Services.AddScoped<PedidoStatusService>();
 builder.Services.AddScoped<PagamentoStatusService>();
+builder.Services.AddScoped<RegraPagamentoService>();
 
 var app = builder.Build();
 
