@@ -47,7 +47,7 @@ public class PedidoAutoService : IPedidoAutoService
 
         foreach (var item in template)
         {
-            pedido.BriefingItems.Add(new BriefingItem
+            pedido.BriefingItens.Add(new BriefingItem
             {
                 Id = Guid.NewGuid(),
                 PedidoId = pedido.Id,

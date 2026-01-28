@@ -20,6 +20,6 @@ namespace GestaoDesignerMemorias.Domain.Entities
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
         public DateTime? DataEvento { get; set; }
 
-        public ICollection<BriefingItem> BriefingItems { get; set; } = new List<BriefingItem>();
+        public ICollection<BriefingItem> BriefingItens { get; set; } = new List<BriefingItem>();
     }
 }
