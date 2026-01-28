@@ -4,26 +4,26 @@ namespace Application.Services
 {
     public class RuleBasedMessageClassifier : IMessageClassifier
     {
-        public MessageCategory Classify(string message)
+        public TipoIntencaoMensagem Classificar(string message)
         {
             if (string.IsNullOrWhiteSpace(message))
-                return MessageCategory.Outros;
+                return TipoIntencaoMensagem.Outros;
 
             var text = message.ToLowerInvariant();
 
             if (ContainsAny(text, "orçamento", "orcamento", "preço", "valor"))
-                return MessageCategory.Orcamento;
+                return TipoIntencaoMensagem.Orcamento;
 
             if (ContainsAny(text, "pedido", "encomenda", "quero fazer", "comprar"))
-                return MessageCategory.Pedido;
+                return TipoIntencaoMensagem.Pedido;
 
             if (ContainsAny(text, "problema", "erro", "não funciona", "falha"))
-                return MessageCategory.Suporte;
+                return TipoIntencaoMensagem.Suporte;
 
             if (ContainsAny(text, "dúvida", "duvida", "como", "quando"))
-                return MessageCategory.Duvida;
+                return TipoIntencaoMensagem.Duvida;
 
-            return MessageCategory.Outros;
+            return TipoIntencaoMensagem.Outros;
         }
 
         private static bool ContainsAny(string text, params string[] keywords)

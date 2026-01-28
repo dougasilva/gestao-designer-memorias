@@ -13,37 +13,37 @@ public class RuleBasedMessageClassifierTests
     }
 
     [Theory]
-    [InlineData("quero um orçamento", MessageCategory.Orcamento)]
-    [InlineData("qual o valor?", MessageCategory.Orcamento)]
-    [InlineData("preço do serviço", MessageCategory.Orcamento)]
-    public void Deve_Classificar_Orcamento(string mensagem, MessageCategory esperado)
+    [InlineData("quero um orçamento", TipoIntencaoMensagem.Orcamento)]
+    [InlineData("qual o valor?", TipoIntencaoMensagem.Orcamento)]
+    [InlineData("preço do serviço", TipoIntencaoMensagem.Orcamento)]
+    public void Deve_Classificar_Orcamento(string mensagem, TipoIntencaoMensagem esperado)
     {
-        var resultado = _classifier.Classify(mensagem);
+        var resultado = _classifier.Classificar(mensagem);
         Assert.Equal(esperado, resultado);
     }
 
     [Theory]
-    [InlineData("quero fazer um pedido", MessageCategory.Pedido)]
-    [InlineData("gostaria de encomendar", MessageCategory.Pedido)]
-    public void Deve_Classificar_Pedido(string mensagem, MessageCategory esperado)
+    [InlineData("quero fazer um pedido", TipoIntencaoMensagem.Pedido)]
+    [InlineData("gostaria de encomendar", TipoIntencaoMensagem.Pedido)]
+    public void Deve_Classificar_Pedido(string mensagem, TipoIntencaoMensagem esperado)
     {
-        var resultado = _classifier.Classify(mensagem);
+        var resultado = _classifier.Classificar(mensagem);
         Assert.Equal(esperado, resultado);
     }
 
     [Theory]
-    [InlineData("não funciona", MessageCategory.Suporte)]
-    [InlineData("deu erro", MessageCategory.Suporte)]
-    public void Deve_Classificar_Suporte(string mensagem, MessageCategory esperado)
+    [InlineData("não funciona", TipoIntencaoMensagem.Suporte)]
+    [InlineData("deu erro", TipoIntencaoMensagem.Suporte)]
+    public void Deve_Classificar_Suporte(string mensagem, TipoIntencaoMensagem esperado)
     {
-        var resultado = _classifier.Classify(mensagem);
+        var resultado = _classifier.Classificar(mensagem);
         Assert.Equal(esperado, resultado);
     }
 
     [Fact]
     public void Mensagem_Desconhecida_Deve_Ser_Outros()
     {
-        var resultado = _classifier.Classify("oi tudo bem");
-        Assert.Equal(MessageCategory.Outros, resultado);
+        var resultado = _classifier.Classificar("oi tudo bem");
+        Assert.Equal(TipoIntencaoMensagem.Outros, resultado);
     }
 }

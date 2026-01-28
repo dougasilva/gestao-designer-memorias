@@ -27,6 +27,8 @@ builder.Services.AddCors(options =>
 
 //Scoped
 builder.Services.AddScoped<IMessageClassifier, RuleBasedMessageClassifier>();
+builder.Services.AddScoped<IPedidoAutoService, PedidoAutoService>();
+
 
 
 var app = builder.Build();

@@ -1,6 +1,6 @@
 ﻿namespace GestaoDesignerMemorias.Domain.Enums
 {
-    public enum MessageCategory
+    public enum TipoIntencaoMensagem
     {
         Orcamento,
         Pedido,

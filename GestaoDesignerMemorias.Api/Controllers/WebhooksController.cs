@@ -2,55 +2,44 @@
 using GestaoDesignerMemorias.Domain.Entities;
 using GestaoDesignerMemorias.Domain.Enums;
 using GestaoDesignerMemorias.DTOs.Webhooks;
+using GestaoDesignerMemorias.Infrastructure;
 using GestaoDesignerMemorias.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace GestaoDesignerMemorias.Controllers;
+namespace GestaoDesignerMemorias.Api.Controllers;
 
 [ApiController]
-[Route("api/webhooks")]
-public class WebhooksController : ControllerBase
+[Route("api/webhook")]
+public class WebhookController : ControllerBase
 {
     private readonly AppDbContext _context;
-    private readonly IMessageClassifier _classifier;
-    private readonly ILogger<WebhooksController> _logger;
+    private readonly IMessageClassifier _messageClassifier;
+    private readonly IPedidoAutoService _pedidoAutoService;
+    private readonly ILogger<WebhookController> _logger;
 
-    public WebhooksController(
+    public WebhookController(
         AppDbContext context,
-        IMessageClassifier classifier,
-        ILogger<WebhooksController> logger)
+        IMessageClassifier messageClassifier,
+        IPedidoAutoService pedidoAutoService,
+        ILogger<WebhookController> logger)
     {
         _context = context;
-        _classifier = classifier;
+        _messageClassifier = messageClassifier;
+        _pedidoAutoService = pedidoAutoService;
         _logger = logger;
     }
 
-    [HttpPost("whatsapp")]
-    public async Task<IActionResult> ReceiveWhatsapp([FromBody] WhatsAppWebhookDto dto)
+    [HttpPost]
+    public async Task<IActionResult> ReceberMensagem([FromBody] WebhookDto dto)
     {
-        if (dto == null || string.IsNullOrWhiteSpace(dto.Mensagem))
-            return BadRequest("Mensagem inválida");
-
-        // 1️⃣ Classificar mensagem
-        var category = _classifier.Classify(dto.Mensagem);
-
-        _logger.LogInformation(
-            "Webhook WhatsApp | Telefone={Telefone} | Categoria={Categoria}",
-            dto.Telefone,
-            category);
-
-        // 2️⃣ Log da mensagem (auditável)
-        var log = new MensagemWebhook
+        if (string.IsNullOrWhiteSpace(dto.Telefone) ||
+            string.IsNullOrWhiteSpace(dto.Mensagem))
         {
-            Id = Guid.NewGuid(),
-            TelefoneOrigem = dto.Telefone,
-            Conteudo = dto.Mensagem,
-            RecebidoEm = DateTime.UtcNow
-        };
-        _context.MensagensWebhook.Add(log);
+            return BadRequest("Payload inválido");
+        }
 
-        // 3️⃣ Buscar ou criar cliente
+        // 1️ - Busca ou cria cliente
         var cliente = await _context.Clientes
             .FirstOrDefaultAsync(c => c.Telefone == dto.Telefone);
 
@@ -59,72 +48,23 @@ public class WebhooksController : ControllerBase
             cliente = new Cliente
             {
                 Id = Guid.NewGuid(),
-                Nome = string.IsNullOrWhiteSpace(dto.Nome)
-                    ? "Contato WhatsApp"
-                    : dto.Nome,
-                Telefone = dto.Telefone
+                Telefone = dto.Telefone,
+                Nome = dto.Nome ?? "Contato WhatsApp"
             };
+
             _context.Clientes.Add(cliente);
+            await _context.SaveChangesAsync();
         }
 
-        // 4️⃣ Decisão por categoria
-        switch (category)
-        {
-            case MessageCategory.Orcamento:
-                CriarPedidoSeNaoExistir(cliente.Id, StatusPedido.OrcamentoSolicitado);
-                break;
+        // 2️ - Classifica intenção
+        var intencao = _messageClassifier.Classificar(dto.Mensagem);
 
-            case MessageCategory.Pedido:
-                CriarPedidoSeNaoExistir(cliente.Id, StatusPedido.Prospecao);
-                break;
+        // 3️ - Cria pedido se aplicável
+        await _pedidoAutoService.CriarPedidoSeAplicavelAsync(
+            cliente.Id,
+            intencao
+        );
 
-            case MessageCategory.Suporte:
-                _logger.LogInformation(
-                    "Mensagem classificada como SUPORTE | Cliente={ClienteId}",
-                    cliente.Id);
-                break;
-
-            case MessageCategory.Duvida:
-                _logger.LogInformation(
-                    "Mensagem classificada como DUVIDA | Cliente={ClienteId}",
-                    cliente.Id);
-                break;
-
-            default:
-                _logger.LogInformation(
-                    "Mensagem classificada como OUTROS | Cliente={ClienteId}",
-                    cliente.Id);
-                break;
-        }
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new
-        {
-            categoria = category.ToString()
-        });
-    }
-
-    private void CriarPedidoSeNaoExistir(Guid clienteId, StatusPedido status)
-    {
-        var existePedidoAberto = _context.Pedidos.Any(p =>
-            p.ClienteId == clienteId &&
-            p.Status == status);
-
-        if (existePedidoAberto)
-            return;
-
-        var pedido = new Pedido
-        {
-            Id = Guid.NewGuid(),
-            ClienteId = clienteId,
-            TipoEvento = "A definir",
-            ValorTotal = 0,
-            Status = status,
-            StatusPagamento = StatusPagamento.Nenhum,
-            DataCriacao = DateTime.UtcNow
-        };
-
-        _context.Pedidos.Add(pedido);
+        return Ok();
     }
 }
