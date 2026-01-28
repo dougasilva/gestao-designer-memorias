@@ -3,7 +3,8 @@
     public enum StatusPagamento
     {
         Nenhum = 0,
-        SinalPago = 1,
-        Pago = 2
+        Pendente = 1,
+        SinalPago = 2,
+        Pago = 3
     }
 }
