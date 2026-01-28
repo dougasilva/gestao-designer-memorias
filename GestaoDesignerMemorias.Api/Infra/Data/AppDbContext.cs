@@ -12,7 +12,7 @@ namespace GestaoDesignerMemorias.Infrastructure.Data
 
         public DbSet<Cliente> Clientes => Set<Cliente>();
         public DbSet<Pedido> Pedidos => Set<Pedido>();
-        public DbSet<BriefingItem> BriefingItems => Set<BriefingItem>();
+        public DbSet<BriefingItem> BriefingItens => Set<BriefingItem>();
         public DbSet<MensagemWebhook> MensagensWebhook => Set<MensagemWebhook>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -50,7 +50,7 @@ namespace GestaoDesignerMemorias.Infrastructure.Data
                 entity.HasKey(b => b.Id);
 
                 entity.HasOne(b => b.Pedido)
-                      .WithMany(p => p.BriefingItems)
+                      .WithMany(p => p.BriefingItens)
                       .HasForeignKey(b => b.PedidoId);
 
                 entity.Property(b => b.Pergunta).IsRequired();

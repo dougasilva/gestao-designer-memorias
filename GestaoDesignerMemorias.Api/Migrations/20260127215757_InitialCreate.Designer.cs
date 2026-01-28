@@ -43,7 +43,7 @@ namespace GestaoDesignerMemorias.Api.Migrations
 
                     b.HasIndex("PedidoId");
 
-                    b.ToTable("BriefingItems");
+                    b.ToTable("BriefingItens");
                 });
 
             modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.Cliente", b =>
@@ -143,7 +143,7 @@ namespace GestaoDesignerMemorias.Api.Migrations
             modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.BriefingItem", b =>
                 {
                     b.HasOne("GestaoDesignerMemorias.Domain.Entities.Pedido", "Pedido")
-                        .WithMany("BriefingItems")
+                        .WithMany("BriefingItens")
                         .HasForeignKey("PedidoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -169,7 +169,7 @@ namespace GestaoDesignerMemorias.Api.Migrations
 
             modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.Pedido", b =>
                 {
-                    b.Navigation("BriefingItems");
+                    b.Navigation("BriefingItens");
                 });
 #pragma warning restore 612, 618
         }

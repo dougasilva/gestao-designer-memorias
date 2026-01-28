@@ -12,13 +12,13 @@ namespace GestaoDesignerMemorias.Api.Migrations
         {
             migrationBuilder.AddColumn<string>(
                 name: "Opcoes",
-                table: "BriefingItems",
+                table: "BriefingItens",
                 type: "TEXT",
                 nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "Tipo",
-                table: "BriefingItems",
+                table: "BriefingItens",
                 type: "INTEGER",
                 nullable: false,
                 defaultValue: 0);
@@ -29,11 +29,11 @@ namespace GestaoDesignerMemorias.Api.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "Opcoes",
-                table: "BriefingItems");
+                table: "BriefingItens");
 
             migrationBuilder.DropColumn(
                 name: "Tipo",
-                table: "BriefingItems");
+                table: "BriefingItens");
         }
     }
 }

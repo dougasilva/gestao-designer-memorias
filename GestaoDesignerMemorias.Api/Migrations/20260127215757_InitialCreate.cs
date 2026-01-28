@@ -67,7 +67,7 @@ namespace GestaoDesignerMemorias.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BriefingItems",
+                name: "BriefingItens",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -78,9 +78,9 @@ namespace GestaoDesignerMemorias.Api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BriefingItems", x => x.Id);
+                    table.PrimaryKey("PK_BriefingItens", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BriefingItems_Pedidos_PedidoId",
+                        name: "FK_BriefingItens_Pedidos_PedidoId",
                         column: x => x.PedidoId,
                         principalTable: "Pedidos",
                         principalColumn: "Id",
@@ -88,8 +88,8 @@ namespace GestaoDesignerMemorias.Api.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_BriefingItems_PedidoId",
-                table: "BriefingItems",
+                name: "IX_BriefingItens_PedidoId",
+                table: "BriefingItens",
                 column: "PedidoId");
 
             migrationBuilder.CreateIndex(
@@ -108,7 +108,7 @@ namespace GestaoDesignerMemorias.Api.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "BriefingItems");
+                name: "BriefingItens");
 
             migrationBuilder.DropTable(
                 name: "MensagensWebhook");

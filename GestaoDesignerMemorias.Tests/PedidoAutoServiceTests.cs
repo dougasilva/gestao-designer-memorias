@@ -45,15 +45,15 @@ public class PedidoAutoServiceTests
         Assert.NotNull(pedidoId);
 
         var pedido = await context.Pedidos
-            .Include(p => p.BriefingItems)
+            .Include(p => p.BriefingItens)
             .FirstOrDefaultAsync(p => p.Id == pedidoId);
 
         Assert.NotNull(pedido);
-        Assert.NotEmpty(pedido!.BriefingItems);
+        Assert.NotEmpty(pedido!.BriefingItens);
 
         // sanity check: pelo menos uma pergunta esperada
         Assert.Contains(
-            pedido.BriefingItems,
+            pedido.BriefingItens,
             b => b.Pergunta == "Tema do evento"
         );
     }
@@ -85,6 +85,6 @@ public class PedidoAutoServiceTests
         // Assert
         Assert.Null(pedidoId);
         Assert.Empty(context.Pedidos);
-        Assert.Empty(context.BriefingItems);
+        Assert.Empty(context.BriefingItens);
     }
 }
