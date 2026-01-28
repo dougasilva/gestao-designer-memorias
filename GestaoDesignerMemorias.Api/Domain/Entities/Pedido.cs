@@ -21,5 +21,8 @@ namespace GestaoDesignerMemorias.Domain.Entities
         public DateTime? DataEvento { get; set; }
 
         public ICollection<BriefingItem> BriefingItens { get; set; } = new List<BriefingItem>();
+
+        public MarcoPedido Marco { get; set; } = MarcoPedido.Criado;
+
     }
 }
