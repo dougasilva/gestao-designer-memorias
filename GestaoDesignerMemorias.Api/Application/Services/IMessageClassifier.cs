@@ -4,6 +4,6 @@ namespace Application.Services
 {
     public interface IMessageClassifier
     {
-        MessageCategory Classify(string message);
+        TipoIntencaoMensagem Classificar(string message);
     }
 }

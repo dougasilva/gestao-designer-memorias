@@ -2,7 +2,7 @@
 
 namespace GestaoDesignerMemorias.DTOs.Webhooks;
 
-public class WhatsAppWebhookDto
+public class WebhookDto
 {
     [Required]
     public string Telefone { get; set; } = null!;
