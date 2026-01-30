@@ -17,6 +17,11 @@ public class PedidoAutoServiceTests
         return new AppDbContext(options);
     }
 
+    private static BriefingInicializacaoService CriarBriefingIni(AppDbContext context)
+    {
+        return new BriefingInicializacaoService(context);
+    }
+
     [Fact]
     public async Task CriarPedidoSeAplicavelAsync_DeveCriarBriefingAutomaticamente()
     {
@@ -33,7 +38,9 @@ public class PedidoAutoServiceTests
         context.Clientes.Add(cliente);
         await context.SaveChangesAsync();
 
-        var service = new PedidoAutoService(context);
+        var briefingInicial = CriarBriefingIni(context);
+
+        var service = new PedidoAutoService(context, briefingInicial);
 
         // Act
         var pedidoId = await service.CriarPedidoSeAplicavelAsync(
@@ -54,7 +61,7 @@ public class PedidoAutoServiceTests
         // sanity check: pelo menos uma pergunta esperada
         Assert.Contains(
             pedido.BriefingItens,
-            b => b.Pergunta == "Tema do evento"
+            b => b.Pergunta == "Descreva o evento com suas próprias palavras"
         );
     }
 
@@ -74,7 +81,9 @@ public class PedidoAutoServiceTests
         context.Clientes.Add(cliente);
         await context.SaveChangesAsync();
 
-        var service = new PedidoAutoService(context);
+        var briefingInicial = CriarBriefingIni(context);
+
+        var service = new PedidoAutoService(context, briefingInicial);
 
         // Act
         var pedidoId = await service.CriarPedidoSeAplicavelAsync(
