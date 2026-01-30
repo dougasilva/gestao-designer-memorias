@@ -15,11 +15,17 @@ public class BriefingController : ControllerBase
         _service = service;
     }
 
-    [HttpPost("responder")]
-    public async Task<IActionResult> Responder([FromBody] BriefingRespostaDto dto)
+    // POST: api/briefing/{briefingItemId}/resposta
+    [HttpPost("{briefingItemId:guid}/resposta")]
+    public async Task<IActionResult> Responder(
+        Guid briefingItemId,
+        [FromBody] BriefingRespostaDto dto)
     {
+        if (string.IsNullOrWhiteSpace(dto.Resposta))
+            return BadRequest("Resposta não pode ser vazia.");
+
         var sucesso = await _service.RegistrarRespostaAsync(
-            dto.BriefingItemId,
+            briefingItemId,
             dto.Resposta
         );
 
