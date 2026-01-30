@@ -1,5 +1,4 @@
-﻿using GestaoDesignerMemorias.Domain.Briefing;
-using GestaoDesignerMemorias.Domain.Entities;
+﻿using GestaoDesignerMemorias.Domain.Entities;
 using GestaoDesignerMemorias.Domain.Enums;
 using GestaoDesignerMemorias.Infrastructure.Data;
 
@@ -9,7 +8,9 @@ public class PedidoAutoService : IPedidoAutoService
     private readonly AppDbContext _context;
     private readonly BriefingInicializacaoService _briefingInicializacaoService;
 
-    public PedidoAutoService(AppDbContext context,BriefingInicializacaoService briefingInicializacaoService)
+    public PedidoAutoService(
+        AppDbContext context,
+        BriefingInicializacaoService briefingInicializacaoService)
     {
         _context = context;
         _briefingInicializacaoService = briefingInicializacaoService;
@@ -27,37 +28,17 @@ public class PedidoAutoService : IPedidoAutoService
         {
             Id = Guid.NewGuid(),
             ClienteId = clienteId,
-            TipoEvento = "aniversário", // primeira versão, será teste - fixo
+            TipoEvento = "aniversário", // MVP, ok
             Status = StatusPedido.Prospecao,
             StatusPagamento = StatusPagamento.Nenhum
         };
 
         _context.Pedidos.Add(pedido);
-
-        // - BRF-03_1
-        await _briefingInicializacaoService.CriarBriefingInicialAsync(pedido.Id);
-
         await _context.SaveChangesAsync();
+
+        await _briefingInicializacaoService
+            .CriarBriefingInicialAsync(pedido.Id);
 
         return pedido.Id;
     }
-
-    private void CriarBriefingInicial(Pedido pedido)
-    {
-        var template =
-            BriefingTemplateFactory.Criar(pedido.TipoEvento);
-
-        foreach (var item in template)
-        {
-            pedido.BriefingItens.Add(new BriefingItem
-            {
-                Id = Guid.NewGuid(),
-                PedidoId = pedido.Id,
-                Pergunta = item.Pergunta,
-                Tipo = item.Tipo,
-                Opcoes = item.Opcoes
-            });
-        }
-    }
-
 }
