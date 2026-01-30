@@ -7,10 +7,12 @@ namespace Application.Services;
 public class PedidoAutoService : IPedidoAutoService
 {
     private readonly AppDbContext _context;
+    private readonly BriefingInicializacaoService _briefingInicializacaoService;
 
-    public PedidoAutoService(AppDbContext context)
+    public PedidoAutoService(AppDbContext context,BriefingInicializacaoService briefingInicializacaoService)
     {
         _context = context;
+        _briefingInicializacaoService = briefingInicializacaoService;
     }
 
     public async Task<Guid?> CriarPedidoSeAplicavelAsync(
@@ -32,8 +34,8 @@ public class PedidoAutoService : IPedidoAutoService
 
         _context.Pedidos.Add(pedido);
 
-        // - BRF-03
-        CriarBriefingInicial(pedido);
+        // - BRF-03_1
+        await _briefingInicializacaoService.CriarBriefingInicialAsync(pedido.Id);
 
         await _context.SaveChangesAsync();
 
