@@ -39,25 +39,28 @@ public class ClientesController : ControllerBase
     public async Task<ActionResult<ClienteResponseDto>> GetById(Guid id)
     {
         var cliente = await _context.Clientes.FindAsync(id);
-
         if (cliente == null)
             return NotFound();
 
-        var response = new ClienteResponseDto
+        return Ok(new ClienteResponseDto
         {
             Id = cliente.Id,
             Nome = cliente.Nome,
             Telefone = cliente.Telefone,
             Email = cliente.Email
-        };
-
-        return Ok(response);
+        });
     }
 
     // POST: api/clientes
     [HttpPost]
     public async Task<ActionResult<ClienteResponseDto>> Create(ClienteCreateDto dto)
     {
+        var telefoneExiste = await _context.Clientes
+            .AnyAsync(c => c.Telefone == dto.Telefone);
+
+        if (telefoneExiste)
+            return Conflict("Cliente já cadastrado com esse telefone.");
+
         var cliente = new Cliente
         {
             Id = Guid.NewGuid(),
@@ -69,15 +72,16 @@ public class ClientesController : ControllerBase
         _context.Clientes.Add(cliente);
         await _context.SaveChangesAsync();
 
-        var response = new ClienteResponseDto
-        {
-            Id = cliente.Id,
-            Nome = cliente.Nome,
-            Telefone = cliente.Telefone,
-            Email = cliente.Email
-        };
-
-        return CreatedAtAction(nameof(GetById), new { id = cliente.Id }, response);
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = cliente.Id },
+            new ClienteResponseDto
+            {
+                Id = cliente.Id,
+                Nome = cliente.Nome,
+                Telefone = cliente.Telefone,
+                Email = cliente.Email
+            });
     }
 
     // PUT: api/clientes/{id}
@@ -85,7 +89,6 @@ public class ClientesController : ControllerBase
     public async Task<IActionResult> Update(Guid id, ClienteUpdateDto dto)
     {
         var cliente = await _context.Clientes.FindAsync(id);
-
         if (cliente == null)
             return NotFound();
 
@@ -94,7 +97,6 @@ public class ClientesController : ControllerBase
         cliente.Email = dto.Email;
 
         await _context.SaveChangesAsync();
-
         return NoContent();
     }
 
@@ -103,13 +105,11 @@ public class ClientesController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         var cliente = await _context.Clientes.FindAsync(id);
-
         if (cliente == null)
             return NotFound();
 
         _context.Clientes.Remove(cliente);
         await _context.SaveChangesAsync();
-
         return NoContent();
     }
 }
