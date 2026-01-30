@@ -39,6 +39,8 @@ public static class BriefingTemplateFactory
 
     private static List<BriefingTemplateItem> Generico() => new()
     {
-        new() { Pergunta = "Descreva o evento", Tipo = BriefingItemType.Texto }
+        new() { Pergunta = "Descreva o evento", Tipo = BriefingItemType.Texto },
+        new() { Pergunta = "Tem local definido", Tipo = BriefingItemType.Texto },
+        new() { Pergunta = "Como nso conheceu", Tipo = BriefingItemType.Texto }
     };
 }

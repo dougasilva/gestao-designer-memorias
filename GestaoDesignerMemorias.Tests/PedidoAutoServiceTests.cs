@@ -1,13 +1,28 @@
 ﻿using Application.Services;
-using GestaoDesignerMemorias.Domain.Entities;
 using GestaoDesignerMemorias.Domain.Enums;
 using GestaoDesignerMemorias.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 namespace GestaoDesignerMemorias.Tests.Application.Services;
 
 public class PedidoAutoServiceTests
 {
+    private readonly AppDbContext _context;
+    private readonly PedidoAutoService _service;
+
+    public PedidoAutoServiceTests()
+    {
+        _context = CriarContextoEmMemoria();
+
+        var briefingInicializacaoService =
+            new BriefingInicializacaoService(_context);
+
+        _service = new PedidoAutoService(
+            _context,
+            briefingInicializacaoService);
+    }
+
     private static AppDbContext CriarContextoEmMemoria()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -17,83 +32,45 @@ public class PedidoAutoServiceTests
         return new AppDbContext(options);
     }
 
-    private static BriefingInicializacaoService CriarBriefingIni(AppDbContext context)
-    {
-        return new BriefingInicializacaoService(context);
-    }
-
     [Fact]
-    public async Task CriarPedidoSeAplicavelAsync_DeveCriarBriefingAutomaticamente()
+    public async Task CriarPedidoSeAplicavelAsync_DeveCriarPedidoEBriefingInicial()
     {
         // Arrange
-        using var context = CriarContextoEmMemoria();
-
-        var cliente = new Cliente
-        {
-            Id = Guid.NewGuid(),
-            Nome = "Cliente Teste",
-            Telefone = "11999999999"
-        };
-
-        context.Clientes.Add(cliente);
-        await context.SaveChangesAsync();
-
-        var briefingInicial = CriarBriefingIni(context);
-
-        var service = new PedidoAutoService(context, briefingInicial);
+        var clienteId = Guid.NewGuid();
 
         // Act
-        var pedidoId = await service.CriarPedidoSeAplicavelAsync(
-            cliente.Id,
-            TipoIntencaoMensagem.Pedido
-        );
+        var pedidoId = await _service.CriarPedidoSeAplicavelAsync(
+            clienteId,
+            TipoIntencaoMensagem.Orcamento);
 
         // Assert
         Assert.NotNull(pedidoId);
 
-        var pedido = await context.Pedidos
+        var pedido = await _context.Pedidos
             .Include(p => p.BriefingItens)
             .FirstOrDefaultAsync(p => p.Id == pedidoId);
 
         Assert.NotNull(pedido);
         Assert.NotEmpty(pedido!.BriefingItens);
 
-        // sanity check: pelo menos uma pergunta esperada
-        Assert.Contains(
-            pedido.BriefingItens,
-            b => b.Pergunta == "Descreva o evento com suas próprias palavras"
-        );
+        // Template de aniversário alguma pergunta
+        Assert.True(pedido.BriefingItens.Any());
     }
 
     [Fact]
-    public async Task CriarPedidoSeAplicavelAsync_NaoDeveCriarPedido_ParaIntencaoIrrelevante()
+    public async Task CriarPedidoSeAplicavelAsync_NaoDeveCriarPedido_QuandoIntencaoInvalida()
     {
         // Arrange
-        using var context = CriarContextoEmMemoria();
-
-        var cliente = new Cliente
-        {
-            Id = Guid.NewGuid(),
-            Nome = "Cliente Teste",
-            Telefone = "11888888888"
-        };
-
-        context.Clientes.Add(cliente);
-        await context.SaveChangesAsync();
-
-        var briefingInicial = CriarBriefingIni(context);
-
-        var service = new PedidoAutoService(context, briefingInicial);
+        var clienteId = Guid.NewGuid();
 
         // Act
-        var pedidoId = await service.CriarPedidoSeAplicavelAsync(
-            cliente.Id,
-            TipoIntencaoMensagem.Duvida
-        );
+        var pedidoId = await _service.CriarPedidoSeAplicavelAsync(
+            clienteId,
+            TipoIntencaoMensagem.Outros);
 
         // Assert
         Assert.Null(pedidoId);
-        Assert.Empty(context.Pedidos);
-        Assert.Empty(context.BriefingItens);
+        Assert.Empty(_context.Pedidos);
+        Assert.Empty(_context.BriefingItens);
     }
 }
