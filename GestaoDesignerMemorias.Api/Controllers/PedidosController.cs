@@ -43,11 +43,10 @@ public class PedidosController : ControllerBase
     public async Task<ActionResult<PedidoResponseDto>> GetById(Guid id)
     {
         var pedido = await _context.Pedidos.FindAsync(id);
-
         if (pedido == null)
             return NotFound();
 
-        var response = new PedidoResponseDto
+        return Ok(new PedidoResponseDto
         {
             Id = pedido.Id,
             ClienteId = pedido.ClienteId,
@@ -56,16 +55,16 @@ public class PedidosController : ControllerBase
             Status = pedido.Status,
             StatusPagamento = pedido.StatusPagamento,
             DataCriacao = pedido.DataCriacao
-        };
-
-        return Ok(response);
+        });
     }
 
     // POST: api/pedidos
     [HttpPost]
     public async Task<ActionResult<PedidoResponseDto>> Create(PedidoCreateDto dto)
     {
-        var clienteExiste = await _context.Clientes.AnyAsync(c => c.Id == dto.ClienteId);
+        var clienteExiste = await _context.Clientes
+            .AnyAsync(c => c.Id == dto.ClienteId);
+
         if (!clienteExiste)
             return BadRequest("Cliente não encontrado.");
 
@@ -83,35 +82,70 @@ public class PedidosController : ControllerBase
         _context.Pedidos.Add(pedido);
         await _context.SaveChangesAsync();
 
-        var response = new PedidoResponseDto
-        {
-            Id = pedido.Id,
-            ClienteId = pedido.ClienteId,
-            TipoEvento = pedido.TipoEvento,
-            ValorTotal = pedido.ValorTotal,
-            Status = pedido.Status,
-            StatusPagamento = StatusPagamento.Pago,
-            DataCriacao = pedido.DataCriacao
-        };
-
-        return CreatedAtAction(nameof(GetById), new { id = pedido.Id }, response);
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = pedido.Id },
+            new PedidoResponseDto
+            {
+                Id = pedido.Id,
+                ClienteId = pedido.ClienteId,
+                TipoEvento = pedido.TipoEvento,
+                ValorTotal = pedido.ValorTotal,
+                Status = pedido.Status,
+                StatusPagamento = pedido.StatusPagamento,
+                DataCriacao = pedido.DataCriacao
+            });
     }
 
-    // PUT: api/pedidos/{id}
-    [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, PedidoUpdateDto dto)
+    // POST: api/pedidos/{id}/aprovar
+    [HttpPost("{id:guid}/aprovar")]
+    public async Task<IActionResult> Aprovar(Guid id)
     {
         var pedido = await _context.Pedidos.FindAsync(id);
-
         if (pedido == null)
             return NotFound();
 
-        pedido.Status = dto.Status;
-        pedido.StatusPagamento = dto.StatusPagamento;
+        if (pedido.Status != StatusPedido.OrcamentoSolicitado)
+            return Conflict("Pedido não está em orçamento solicitado.");
+
+        pedido.Status = StatusPedido.Aprovado;
 
         await _context.SaveChangesAsync();
+        return Ok();
+    }
 
-        return NoContent();
+    // POST: api/pedidos/{id}/iniciar-producao
+    [HttpPost("{id:guid}/iniciar-producao")]
+    public async Task<IActionResult> IniciarProducao(Guid id)
+    {
+        var pedido = await _context.Pedidos.FindAsync(id);
+        if (pedido == null)
+            return NotFound();
+
+        if (pedido.Status != StatusPedido.Aprovado)
+            return Conflict("Pedido não está aprovado.");
+
+        pedido.Status = StatusPedido.EmProducao;
+
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+
+    // POST: api/pedidos/{id}/entregar
+    [HttpPost("{id:guid}/entregar")]
+    public async Task<IActionResult> Entregar(Guid id)
+    {
+        var pedido = await _context.Pedidos.FindAsync(id);
+        if (pedido == null)
+            return NotFound();
+
+        if (pedido.Status != StatusPedido.EmProducao)
+            return Conflict("Pedido não está em produção.");
+
+        pedido.Status = StatusPedido.Entregue;
+
+        await _context.SaveChangesAsync();
+        return Ok();
     }
 
     // DELETE: api/pedidos/{id}
@@ -119,7 +153,6 @@ public class PedidosController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         var pedido = await _context.Pedidos.FindAsync(id);
-
         if (pedido == null)
             return NotFound();
 
