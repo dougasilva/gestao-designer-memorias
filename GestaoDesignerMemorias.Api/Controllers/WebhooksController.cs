@@ -2,7 +2,6 @@
 using GestaoDesignerMemorias.Domain.Entities;
 using GestaoDesignerMemorias.Domain.Enums;
 using GestaoDesignerMemorias.DTOs.Webhooks;
-using GestaoDesignerMemorias.Infrastructure;
 using GestaoDesignerMemorias.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -39,32 +38,48 @@ public class WebhookController : ControllerBase
             return BadRequest("Payload inválido");
         }
 
-        // 1️ - Busca ou cria cliente
-        var cliente = await _context.Clientes
-            .FirstOrDefaultAsync(c => c.Telefone == dto.Telefone);
-
-        if (cliente == null)
+        try
         {
-            cliente = new Cliente
+            // 1 - Busca ou cria cliente
+            var cliente = await _context.Clientes
+                .FirstOrDefaultAsync(c => c.Telefone == dto.Telefone);
+
+            if (cliente == null)
             {
-                Id = Guid.NewGuid(),
-                Telefone = dto.Telefone,
-                Nome = dto.Nome ?? "Contato WhatsApp"
-            };
+                cliente = new Cliente
+                {
+                    Id = Guid.NewGuid(),
+                    Telefone = dto.Telefone,
+                    Nome = dto.Nome ?? "Contato WhatsApp"
+                };
 
-            _context.Clientes.Add(cliente);
-            await _context.SaveChangesAsync();
+                _context.Clientes.Add(cliente);
+                await _context.SaveChangesAsync();
+            }
+
+            // 2 - Classifica intenção
+            var intencao = _messageClassifier.Classificar(dto.Mensagem);
+
+            // 3 - Evita múltiplos pedidos abertos
+            var existePedidoAberto = await _context.Pedidos.AnyAsync(p =>
+                p.ClienteId == cliente.Id &&
+                p.Status != StatusPedido.Entregue &&
+                p.Status != StatusPedido.Cancelado);
+
+            if (!existePedidoAberto)
+            {
+                await _pedidoAutoService.CriarPedidoSeAplicavelAsync(
+                    cliente.Id,
+                    intencao
+                );
+            }
+
+            return Ok();
         }
-
-        // 2️ - Classifica intenção
-        var intencao = _messageClassifier.Classificar(dto.Mensagem);
-
-        // 3️ - Cria pedido se aplicável
-        await _pedidoAutoService.CriarPedidoSeAplicavelAsync(
-            cliente.Id,
-            intencao
-        );
-
-        return Ok();
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao processar webhook WhatsApp");
+            return StatusCode(500, "Erro interno ao processar webhook");
+        }
     }
 }
