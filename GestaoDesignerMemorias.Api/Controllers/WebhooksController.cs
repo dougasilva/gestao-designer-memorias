@@ -38,9 +38,21 @@ public class WebhookController : ControllerBase
             return BadRequest("Payload inválido");
         }
 
+        // 1 - Salva mensagem recebida
+        var mensagem = new MensagemWebhook
+        {
+            Id = Guid.NewGuid(),
+            TelefoneOrigem = dto.Telefone,
+            Conteudo = dto.Mensagem,
+            Processado = false
+        };
+
+        _context.MensagensWebhook.Add(mensagem);
+        await _context.SaveChangesAsync();
+
         try
         {
-            // 1 - Busca ou cria cliente
+            // 2 - Busca ou cria cliente
             var cliente = await _context.Clientes
                 .FirstOrDefaultAsync(c => c.Telefone == dto.Telefone);
 
@@ -57,29 +69,39 @@ public class WebhookController : ControllerBase
                 await _context.SaveChangesAsync();
             }
 
-            // 2 - Classifica intenção
-            var intencao = _messageClassifier.Classificar(dto.Mensagem);
-
-            // 3 - Evita múltiplos pedidos abertos
-            var existePedidoAberto = await _context.Pedidos.AnyAsync(p =>
-                p.ClienteId == cliente.Id &&
-                p.Status != StatusPedido.Entregue &&
-                p.Status != StatusPedido.Cancelado);
-
-            if (!existePedidoAberto)
+            // 3 - Classifica intenção (fail-safe)
+            TipoIntencaoMensagem intencao;
+            try
             {
-                await _pedidoAutoService.CriarPedidoSeAplicavelAsync(
-                    cliente.Id,
-                    intencao
-                );
+                intencao = _messageClassifier.Classificar(dto.Mensagem);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao classificar mensagem");
+                mensagem.Observacao = "Erro na classificação";
+                await _context.SaveChangesAsync();
+                return Ok(); // webhook NUNCA quebra
+            }
+
+            // 4 - Cria pedido se aplicável
+            await _pedidoAutoService.CriarPedidoSeAplicavelAsync(
+                cliente.Id,
+                intencao
+            );
+
+            mensagem.Processado = true;
+            mensagem.Observacao = $"Intenção: {intencao}";
+            await _context.SaveChangesAsync();
 
             return Ok();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao processar webhook WhatsApp");
-            return StatusCode(500, "Erro interno ao processar webhook");
+            _logger.LogError(ex, "Erro ao processar webhook");
+            mensagem.Observacao = "Erro inesperado";
+            await _context.SaveChangesAsync();
+            return Ok(); // webhook nunca devolve 500
         }
     }
+
 }
