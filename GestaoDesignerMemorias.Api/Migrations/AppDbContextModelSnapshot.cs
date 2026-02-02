@@ -24,6 +24,7 @@ namespace GestaoDesignerMemorias.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Opcoes")
+                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Ordem")
@@ -44,7 +45,7 @@ namespace GestaoDesignerMemorias.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PedidoId");
+                    b.HasIndex("PedidoId", "Ordem");
 
                     b.ToTable("BriefingItens");
                 });
@@ -56,9 +57,12 @@ namespace GestaoDesignerMemorias.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DataCriacao")
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Email")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Nome")
@@ -92,13 +96,18 @@ namespace GestaoDesignerMemorias.Api.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("RecebidoEm")
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("TelefoneOrigem")
                         .IsRequired()
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Processado");
 
                     b.ToTable("MensagensWebhook");
                 });
@@ -113,10 +122,15 @@ namespace GestaoDesignerMemorias.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DataCriacao")
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTime?>("DataEvento")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Marco")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
@@ -126,6 +140,7 @@ namespace GestaoDesignerMemorias.Api.Migrations
 
                     b.Property<string>("TipoEvento")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("ValorPago")
