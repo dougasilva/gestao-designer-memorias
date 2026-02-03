@@ -11,12 +11,16 @@ public class BriefingRespostaServiceTests
     private readonly AppDbContext _context;
     private readonly PedidoStatusService _pedidoStatusService;
     private readonly BriefingRespostaService _service;
+    private readonly PedidoTimelineService _pedidoTimeline;
 
     public BriefingRespostaServiceTests()
     {
+        
         _context = CriarContextoEmMemoria();
-        _pedidoStatusService = new PedidoStatusService(_context);
+        _pedidoTimeline = new PedidoTimelineService(_context);
+        _pedidoStatusService = new PedidoStatusService(_context, _pedidoTimeline);
         _service = new BriefingRespostaService(_context, _pedidoStatusService);
+        
     }
 
     private static AppDbContext CriarContextoEmMemoria()

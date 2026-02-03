@@ -6,10 +6,12 @@ namespace Application.Services;
 public class PedidoStatusService
 {
     private readonly AppDbContext _context;
+    private readonly PedidoTimelineService _timelineService;
 
-    public PedidoStatusService(AppDbContext context)
+    public PedidoStatusService(AppDbContext context, PedidoTimelineService timelineService)
     {
         _context = context;
+        _timelineService = timelineService;
     }
 
     public async Task<bool> AvaliarStatusAsync(Guid pedidoId)
@@ -27,6 +29,14 @@ public class PedidoStatusService
         if (todosRespondidos && pedido.Status != StatusPedido.OrcamentoSolicitado)
         {
             pedido.Status = StatusPedido.OrcamentoSolicitado;
+
+            await _timelineService.RegistrarAsync(
+                pedido.Id,
+                pedido.Status,
+                pedido.Marco,
+                "Briefing completo — orçamento solicitado"
+            );
+
             await _context.SaveChangesAsync();
         }
 

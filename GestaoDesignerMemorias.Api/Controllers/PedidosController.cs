@@ -161,4 +161,24 @@ public class PedidosController : ControllerBase
 
         return NoContent();
     }
+
+    // GET: api/pedidos/{id}/timeline
+    [HttpGet("{id:guid}/timeline")]
+    public async Task<IActionResult> GetTimeline(Guid id)
+    {
+        var timeline = await _context.PedidoTimelines
+            .Where(t => t.PedidoId == id)
+            .OrderBy(t => t.CriadoEm)
+            .Select(t => new
+            {
+                t.Status,
+                t.Marco,
+                t.Evento,
+                t.CriadoEm
+            })
+            .ToListAsync();
+
+        return Ok(timeline);
+    }
+
 }

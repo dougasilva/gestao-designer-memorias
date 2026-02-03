@@ -7,13 +7,13 @@ public class PedidoAutoService : IPedidoAutoService
 {
     private readonly AppDbContext _context;
     private readonly BriefingInicializacaoService _briefingInicializacaoService;
+    private readonly PedidoTimelineService _timelineService;
 
-    public PedidoAutoService(
-        AppDbContext context,
-        BriefingInicializacaoService briefingInicializacaoService)
+    public PedidoAutoService(AppDbContext context, BriefingInicializacaoService briefingInicializacaoService, PedidoTimelineService timelineService)
     {
         _context = context;
         _briefingInicializacaoService = briefingInicializacaoService;
+        _timelineService = timelineService;
     }
 
     public async Task<Guid?> CriarPedidoSeAplicavelAsync(
@@ -38,6 +38,14 @@ public class PedidoAutoService : IPedidoAutoService
 
         await _briefingInicializacaoService
             .CriarBriefingInicialAsync(pedido.Id);
+
+        await _timelineService.RegistrarAsync(
+            pedido.Id,
+            pedido.Status,
+            pedido.Marco,
+            "Pedido criado automaticamente via WhatsApp"
+        );
+
 
         return pedido.Id;
     }
