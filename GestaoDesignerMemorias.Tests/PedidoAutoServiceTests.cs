@@ -10,17 +10,15 @@ public class PedidoAutoServiceTests
 {
     private readonly AppDbContext _context;
     private readonly PedidoAutoService _service;
+    private readonly PedidoTimelineService _pedidoTimelineService;
 
     public PedidoAutoServiceTests()
     {
         _context = CriarContextoEmMemoria();
-
-        var briefingInicializacaoService =
-            new BriefingInicializacaoService(_context);
-
-        _service = new PedidoAutoService(
-            _context,
-            briefingInicializacaoService);
+        var briefingInicializacaoService = new BriefingInicializacaoService(_context);
+        _pedidoTimelineService = new PedidoTimelineService(_context);
+        _service = new PedidoAutoService(_context, briefingInicializacaoService, _pedidoTimelineService);
+        
     }
 
     private static AppDbContext CriarContextoEmMemoria()

@@ -14,6 +14,8 @@ namespace GestaoDesignerMemorias.Infrastructure.Data
         public DbSet<Pedido> Pedidos => Set<Pedido>();
         public DbSet<BriefingItem> BriefingItens => Set<BriefingItem>();
         public DbSet<MensagemWebhook> MensagensWebhook => Set<MensagemWebhook>();
+        public DbSet<PedidoTimeline> PedidoTimelines => Set<PedidoTimeline>();
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -123,6 +125,23 @@ namespace GestaoDesignerMemorias.Infrastructure.Data
 
                 entity.HasIndex(m => m.Processado);
             });
+
+            // =========================
+            // PedidoTimeline
+            // =========================
+            modelBuilder.Entity<PedidoTimeline>(entity =>
+            {
+                entity.HasKey(t => t.Id);
+
+                entity.HasOne(t => t.Pedido)
+                      .WithMany(p => p.Timeline)
+                      .HasForeignKey(t => t.PedidoId);
+
+                entity.Property(t => t.Evento)
+                      .IsRequired()
+                      .HasMaxLength(200);
+            });
+
         }
 
     }
