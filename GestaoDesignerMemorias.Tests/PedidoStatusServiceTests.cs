@@ -22,6 +22,12 @@ public class PedidoStatusServiceTests
         return new PedidoTimelineService(context);
     }
 
+    private static PedidoTransicaoService CriarPedidoTransicaoService(AppDbContext context)
+    {
+        var timelineService = CriarPedidoTimelineService(context);
+        return new PedidoTransicaoService(context, timelineService);
+    }
+
     [Fact]
     public async Task AvaliarStatusAsync_DeveMudarParaEmOrcamento_QuandoTodosRespondidos()
     {
@@ -57,7 +63,7 @@ public class PedidoStatusServiceTests
         context.BriefingItens.AddRange(item1, item2);
         await context.SaveChangesAsync();
 
-        var service = new PedidoStatusService(context, CriarPedidoTimelineService(context));
+        var service = new PedidoStatusService(context, CriarPedidoTimelineService(context), CriarPedidoTransicaoService(context));
 
         // Act
         await service.AvaliarStatusAsync(pedido.Id);
@@ -93,7 +99,7 @@ public class PedidoStatusServiceTests
         context.BriefingItens.Add(item);
         await context.SaveChangesAsync();
 
-        var service = new PedidoStatusService(context, CriarPedidoTimelineService(context));
+        var service = new PedidoStatusService(context, CriarPedidoTimelineService(context), CriarPedidoTransicaoService(context));
 
         // Act
         await service.AvaliarStatusAsync(pedido.Id);

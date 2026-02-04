@@ -161,34 +161,34 @@ namespace GestaoDesignerMemorias.Api.Migrations
                     b.ToTable("Pedidos");
                 });
 
-            modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.PedidoTimeline", b =>
+            modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.PedidoEvento", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("Evento")
-                        .IsRequired()
-                        .HasMaxLength(200)
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("Marco")
-                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("PedidoId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PedidoId");
+                    b.HasIndex("PedidoId", "CriadoEm");
 
-                    b.ToTable("PedidoTimelines");
+                    b.ToTable("PedidoEventos");
                 });
 
             modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.BriefingItem", b =>
@@ -213,10 +213,10 @@ namespace GestaoDesignerMemorias.Api.Migrations
                     b.Navigation("Cliente");
                 });
 
-            modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.PedidoTimeline", b =>
+            modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.PedidoEvento", b =>
                 {
                     b.HasOne("GestaoDesignerMemorias.Domain.Entities.Pedido", "Pedido")
-                        .WithMany("Timeline")
+                        .WithMany("Eventos")
                         .HasForeignKey("PedidoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -233,7 +233,7 @@ namespace GestaoDesignerMemorias.Api.Migrations
                 {
                     b.Navigation("BriefingItens");
 
-                    b.Navigation("Timeline");
+                    b.Navigation("Eventos");
                 });
 #pragma warning restore 612, 618
         }

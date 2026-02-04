@@ -78,6 +78,9 @@ namespace GestaoDesignerMemorias.Infrastructure.Data
                 entity.Property(p => p.ValorPago)
                       .HasPrecision(10, 2);
 
+                entity.Property(p => p.DataEvento)
+                      .IsRequired(false);
+
                 entity.Property(p => p.DataCriacao)
                       .HasDefaultValueSql("CURRENT_TIMESTAMP");
             });
@@ -104,6 +107,10 @@ namespace GestaoDesignerMemorias.Infrastructure.Data
 
                 entity.Property(b => b.Opcoes)
                       .HasMaxLength(1000);
+
+                entity.Property(b => b.Ordem)
+                      .IsRequired();
+
             });
 
             // =========================
@@ -135,7 +142,9 @@ namespace GestaoDesignerMemorias.Infrastructure.Data
 
                 entity.HasOne(e => e.Pedido)
                       .WithMany(p => p.Eventos)
-                      .HasForeignKey(e => e.PedidoId);
+                      .HasForeignKey(e => e.PedidoId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
 
                 entity.Property(e => e.Tipo)
                       .IsRequired()
@@ -143,6 +152,12 @@ namespace GestaoDesignerMemorias.Infrastructure.Data
 
                 entity.Property(e => e.Descricao)
                       .HasMaxLength(500);
+
+                entity.HasIndex(e => new { e.PedidoId, e.CriadoEm });
+
+                entity.Property(e => e.CriadoEm).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+
             });
 
 
