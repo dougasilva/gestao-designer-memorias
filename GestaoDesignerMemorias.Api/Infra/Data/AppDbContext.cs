@@ -14,7 +14,7 @@ namespace GestaoDesignerMemorias.Infrastructure.Data
         public DbSet<Pedido> Pedidos => Set<Pedido>();
         public DbSet<BriefingItem> BriefingItens => Set<BriefingItem>();
         public DbSet<MensagemWebhook> MensagensWebhook => Set<MensagemWebhook>();
-        public DbSet<PedidoTimeline> PedidoTimelines => Set<PedidoTimeline>();
+        public DbSet<PedidoEvento> PedidoEventos => Set<PedidoEvento>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -127,20 +127,24 @@ namespace GestaoDesignerMemorias.Infrastructure.Data
             });
 
             // =========================
-            // PedidoTimeline
+            // PedidoEvento
             // =========================
-            modelBuilder.Entity<PedidoTimeline>(entity =>
+            modelBuilder.Entity<PedidoEvento>(entity =>
             {
-                entity.HasKey(t => t.Id);
+                entity.HasKey(e => e.Id);
 
-                entity.HasOne(t => t.Pedido)
-                      .WithMany(p => p.Timeline)
-                      .HasForeignKey(t => t.PedidoId);
+                entity.HasOne(e => e.Pedido)
+                      .WithMany(p => p.Eventos)
+                      .HasForeignKey(e => e.PedidoId);
 
-                entity.Property(t => t.Evento)
+                entity.Property(e => e.Tipo)
                       .IsRequired()
-                      .HasMaxLength(200);
+                      .HasMaxLength(100);
+
+                entity.Property(e => e.Descricao)
+                      .HasMaxLength(500);
             });
+
 
         }
 

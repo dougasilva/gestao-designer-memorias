@@ -24,8 +24,7 @@ namespace GestaoDesignerMemorias.Domain.Entities
 
         public MarcoPedido Marco { get; set; } = MarcoPedido.Criado;
 
-        public ICollection<PedidoTimeline> Timeline { get; set; } = new List<PedidoTimeline>();
-
+        public ICollection<PedidoEvento> Eventos { get; set; } = new List<PedidoEvento>();
 
     }
 }
