@@ -41,8 +41,7 @@ public class PedidoAutoService : IPedidoAutoService
 
         await _timelineService.RegistrarAsync(
             pedido.Id,
-            pedido.Status,
-            pedido.Marco,
+            "PedidoCriado",
             "Pedido criado automaticamente via WhatsApp"
         );
 

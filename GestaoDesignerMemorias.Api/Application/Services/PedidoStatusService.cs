@@ -32,9 +32,8 @@ public class PedidoStatusService
 
             await _timelineService.RegistrarAsync(
                 pedido.Id,
-                pedido.Status,
-                pedido.Marco,
-                "Briefing completo — orçamento solicitado"
+                "BriefingConcluido",
+                "Todas as perguntas respondidas. Status alterado para OrcamentoSolicitado"
             );
 
             await _context.SaveChangesAsync();

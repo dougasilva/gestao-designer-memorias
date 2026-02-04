@@ -1,8 +1,5 @@
 ﻿using GestaoDesignerMemorias.Domain.Entities;
-using GestaoDesignerMemorias.Domain.Enums;
 using GestaoDesignerMemorias.Infrastructure.Data;
-
-namespace Application.Services;
 
 public class PedidoTimelineService
 {
@@ -13,22 +10,17 @@ public class PedidoTimelineService
         _context = context;
     }
 
-    public async Task RegistrarAsync(
-        Guid pedidoId,
-        StatusPedido status,
-        MarcoPedido marco,
-        string evento)
+    public async Task RegistrarAsync(Guid pedidoId, string tipo, string? descricao = null)
     {
-        var timeline = new PedidoTimeline
+        var evento = new PedidoEvento
         {
             Id = Guid.NewGuid(),
             PedidoId = pedidoId,
-            Status = status,
-            Marco = marco,
-            Evento = evento
+            Tipo = tipo,
+            Descricao = descricao
         };
 
-        _context.PedidoTimelines.Add(timeline);
+        _context.PedidoEventos.Add(evento);
         await _context.SaveChangesAsync();
     }
 }
