@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GestaoDesignerMemorias.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCleanModel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,7 +34,8 @@ namespace GestaoDesignerMemorias.Api.Migrations
                     TelefoneOrigem = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
                     Conteudo = table.Column<string>(type: "TEXT", nullable: false),
                     RecebidoEm = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    Processado = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Processado = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Observacao = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -90,6 +91,27 @@ namespace GestaoDesignerMemorias.Api.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "PedidoEventos",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    PedidoId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Tipo = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Descricao = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    CriadoEm = table.Column<DateTime>(type: "TEXT", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PedidoEventos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PedidoEventos_Pedidos_PedidoId",
+                        column: x => x.PedidoId,
+                        principalTable: "Pedidos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_BriefingItens_PedidoId_Ordem",
                 table: "BriefingItens",
@@ -107,6 +129,11 @@ namespace GestaoDesignerMemorias.Api.Migrations
                 column: "Processado");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PedidoEventos_PedidoId_CriadoEm",
+                table: "PedidoEventos",
+                columns: new[] { "PedidoId", "CriadoEm" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Pedidos_ClienteId",
                 table: "Pedidos",
                 column: "ClienteId");
@@ -120,6 +147,9 @@ namespace GestaoDesignerMemorias.Api.Migrations
 
             migrationBuilder.DropTable(
                 name: "MensagensWebhook");
+
+            migrationBuilder.DropTable(
+                name: "PedidoEventos");
 
             migrationBuilder.DropTable(
                 name: "Pedidos");

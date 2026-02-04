@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestaoDesignerMemorias.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260202142518_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260204221823_InitialCleanModel")]
+    partial class InitialCleanModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -95,6 +95,9 @@ namespace GestaoDesignerMemorias.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Observacao")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("Processado")
                         .HasColumnType("INTEGER");
 
@@ -161,6 +164,36 @@ namespace GestaoDesignerMemorias.Api.Migrations
                     b.ToTable("Pedidos");
                 });
 
+            modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.PedidoEvento", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PedidoId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PedidoId", "CriadoEm");
+
+                    b.ToTable("PedidoEventos");
+                });
+
             modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.BriefingItem", b =>
                 {
                     b.HasOne("GestaoDesignerMemorias.Domain.Entities.Pedido", "Pedido")
@@ -183,6 +216,17 @@ namespace GestaoDesignerMemorias.Api.Migrations
                     b.Navigation("Cliente");
                 });
 
+            modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.PedidoEvento", b =>
+                {
+                    b.HasOne("GestaoDesignerMemorias.Domain.Entities.Pedido", "Pedido")
+                        .WithMany("Eventos")
+                        .HasForeignKey("PedidoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Pedido");
+                });
+
             modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.Cliente", b =>
                 {
                     b.Navigation("Pedidos");
@@ -191,6 +235,8 @@ namespace GestaoDesignerMemorias.Api.Migrations
             modelBuilder.Entity("GestaoDesignerMemorias.Domain.Entities.Pedido", b =>
                 {
                     b.Navigation("BriefingItens");
+
+                    b.Navigation("Eventos");
                 });
 #pragma warning restore 612, 618
         }

@@ -7,11 +7,13 @@ public class PedidoStatusService
 {
     private readonly AppDbContext _context;
     private readonly PedidoTimelineService _timelineService;
+    private readonly PedidoTransicaoService _transicaoService;
 
-    public PedidoStatusService(AppDbContext context, PedidoTimelineService timelineService)
+    public PedidoStatusService(AppDbContext context, PedidoTimelineService timelineService, PedidoTransicaoService transicaoService)
     {
         _context = context;
         _timelineService = timelineService;
+        _transicaoService = transicaoService;
     }
 
     public async Task<bool> AvaliarStatusAsync(Guid pedidoId)
@@ -28,7 +30,11 @@ public class PedidoStatusService
 
         if (todosRespondidos && pedido.Status != StatusPedido.OrcamentoSolicitado)
         {
-            pedido.Status = StatusPedido.OrcamentoSolicitado;
+            await _transicaoService.AlterarStatusAsync(
+                pedido.Id,
+                StatusPedido.OrcamentoSolicitado,
+                "Briefing completo"
+            );
 
             await _timelineService.RegistrarAsync(
                 pedido.Id,

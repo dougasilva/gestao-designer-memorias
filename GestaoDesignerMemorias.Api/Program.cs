@@ -14,6 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevCors", policy =>
@@ -34,6 +35,7 @@ builder.Services.AddScoped<PagamentoStatusService>();
 builder.Services.AddScoped<RegraPagamentoService>();
 builder.Services.AddScoped<BriefingInicializacaoService>();
 builder.Services.AddScoped<PedidoTimelineService>();
+builder.Services.AddScoped<PedidoTransicaoService>();
 
 var app = builder.Build();
 
