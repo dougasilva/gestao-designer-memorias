@@ -1,4 +1,5 @@
-﻿using GestaoDesignerMemorias.Domain.Enums;
+﻿using GestaoDesignerMemorias.Domain.Entities;
+using GestaoDesignerMemorias.Domain.Enums;
 using GestaoDesignerMemorias.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,67 +8,74 @@ namespace Application.Services;
 public class PedidoTransicaoService
 {
     private readonly AppDbContext _context;
-    private readonly PedidoTimelineService _timelineService;
 
-    public PedidoTransicaoService(
-        AppDbContext context,
-        PedidoTimelineService timelineService)
+    public PedidoTransicaoService(AppDbContext context)
     {
         _context = context;
-        _timelineService = timelineService;
     }
 
-    public async Task<bool> AlterarStatusAsync(
+    public async Task<bool> ExecutarAsync(
         Guid pedidoId,
-        StatusPedido novoStatus,
-        string motivo)
+        AcaoPedido acao,
+        string? descricao = null)
     {
         var pedido = await _context.Pedidos
-            .FirstOrDefaultAsync(p => p.Id == pedidoId);
+                     .Include(p => p.Eventos)
+                     .FirstOrDefaultAsync(p => p.Id == pedidoId);
 
         if (pedido == null)
             return false;
 
-        if (pedido.Status == novoStatus)
-            return true;
+        switch (acao)
+        {
+            case AcaoPedido.BriefingConcluido:
+                if (pedido.Status != StatusPedido.BriefingEmAndamento &&
+                    pedido.Status != StatusPedido.Prospecao)
+                    return false;
 
-        pedido.Status = novoStatus;
+                pedido.Status = StatusPedido.OrcamentoSolicitado;
+                RegistrarEvento(pedido, "BriefingConcluido", descricao);
+                break;
+
+            case AcaoPedido.OrcamentoAprovado:
+                if (pedido.Status != StatusPedido.OrcamentoSolicitado)
+                    return false;
+
+                pedido.Status = StatusPedido.Aprovado;
+                pedido.Marco = MarcoPedido.OrcamentoAprovado;
+                RegistrarEvento(pedido, "OrcamentoAprovado", descricao);
+                break;
+
+            case AcaoPedido.IniciarProducao:
+                if (pedido.Status != StatusPedido.Aprovado)
+                    return false;
+
+                pedido.Status = StatusPedido.EmProducao;
+                RegistrarEvento(pedido, "ProducaoIniciada", descricao);
+                break;
+
+            case AcaoPedido.MarcarEntregue:
+                if (pedido.Status != StatusPedido.EmProducao)
+                    return false;
+
+                pedido.Status = StatusPedido.Entregue;
+                pedido.Marco = MarcoPedido.Entregue;
+                RegistrarEvento(pedido, "PedidoEntregue", descricao);
+                break;
+        }
 
         await _context.SaveChangesAsync();
-
-        await _timelineService.RegistrarAsync(
-            pedido.Id,
-            "StatusAlterado",
-            $"Status alterado para {novoStatus}. Motivo: {motivo}"
-        );
-
         return true;
     }
 
-    public async Task<bool> AlterarMarcoAsync(
-        Guid pedidoId,
-        MarcoPedido novoMarco,
-        string motivo)
+    private void RegistrarEvento(Pedido pedido, string tipo, string? descricao)
     {
-        var pedido = await _context.Pedidos
-            .FirstOrDefaultAsync(p => p.Id == pedidoId);
-
-        if (pedido == null)
-            return false;
-
-        if (pedido.Marco == novoMarco)
-            return true;
-
-        pedido.Marco = novoMarco;
-
-        await _context.SaveChangesAsync();
-
-        await _timelineService.RegistrarAsync(
-            pedido.Id,
-            "MarcoAlterado",
-            $"Marco alterado para {novoMarco}. Motivo: {motivo}"
-        );
-
-        return true;
+        pedido.Eventos.Add(new PedidoEvento
+        {
+            Id = Guid.NewGuid(),
+            PedidoId = pedido.Id,
+            Tipo = tipo,
+            Descricao = descricao
+        });
     }
 }

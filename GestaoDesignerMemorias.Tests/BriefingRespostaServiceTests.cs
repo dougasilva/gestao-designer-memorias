@@ -2,99 +2,108 @@
 using GestaoDesignerMemorias.Domain.Entities;
 using GestaoDesignerMemorias.Domain.Enums;
 using GestaoDesignerMemorias.Infrastructure.Data;
+using GestaoDesignerMemorias.Tests.Helpers;
 using Microsoft.EntityFrameworkCore;
+using Moq;
+using Xunit;
 
 namespace GestaoDesignerMemorias.Tests.Application.Services;
 
-public class BriefingRespostaServiceTests
+public class BriefingRespostaServiceTests : IDisposable
 {
-    private readonly AppDbContext _context;
-    private readonly PedidoStatusService _pedidoStatusService;
+    private readonly AppDbContext _testContext;
     private readonly BriefingRespostaService _service;
-    private readonly PedidoTimelineService _pedidoTimeline;
-    private readonly PedidoTransicaoService _pedidoTransicao;
+    private readonly Mock<PedidoStatusService> _mockPedidoStatusService;
 
     public BriefingRespostaServiceTests()
     {
-        
-        _context = CriarContextoEmMemoria();
-        _pedidoTimeline = new PedidoTimelineService(_context);
-        _pedidoTransicao = new PedidoTransicaoService(_context, _pedidoTimeline);
-        _pedidoStatusService = new PedidoStatusService(_context, _pedidoTimeline, _pedidoTransicao);
-        _service = new BriefingRespostaService(_context, _pedidoStatusService);
-        
+        _testContext = InMemoryDbContextFactory.Create();
+
+        _mockPedidoStatusService = new Mock<PedidoStatusService>();
+        _mockPedidoStatusService
+            .Setup(s => s.AvaliarStatusAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(true);
+
+        var respostaContext = InMemoryDbContextFactory.Create();
+
+        _service = new BriefingRespostaService(
+            respostaContext,
+            _mockPedidoStatusService.Object
+        );
     }
 
-    private static AppDbContext CriarContextoEmMemoria()
+    public void Dispose()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-
-        return new AppDbContext(options);
+        _testContext.Dispose();
     }
 
-    private async Task<(Pedido pedido, BriefingItem briefingItem)> CriarPedidoComBriefingItemAsync()
+    private async Task<BriefingItem> CriarPedidoComBriefingItemAsync()
     {
         var pedido = new Pedido
         {
             Id = Guid.NewGuid(),
             ClienteId = Guid.NewGuid(),
-            TipoEvento = "aniversário"
+            TipoEvento = "aniversário",
+            Status = StatusPedido.Prospecao,
+            BriefingItens = new List<BriefingItem>()
         };
 
         var briefingItem = new BriefingItem
         {
             Id = Guid.NewGuid(),
             PedidoId = pedido.Id,
-            Pergunta = "Tema do evento",
-            Tipo = BriefingItemType.Texto
+            Pergunta = "Tema",
+            Tipo = BriefingItemType.Texto,
+            Resposta = null,
+            Ordem = 1  // required
         };
 
-        _context.Pedidos.Add(pedido);
-        _context.BriefingItens.Add(briefingItem);
-        await _context.SaveChangesAsync();
+        pedido.BriefingItens.Add(briefingItem);
 
-        return (pedido, briefingItem);
+        _testContext.Pedidos.Add(pedido);
+        await _testContext.SaveChangesAsync();
+
+        return briefingItem;
     }
 
     [Fact]
     public async Task RegistrarRespostaAsync_DeveSalvarRespostaNoBriefingItem()
     {
-        // Arrange
-        var (_, briefingItem) = await CriarPedidoComBriefingItemAsync();
+        var briefingItem = await CriarPedidoComBriefingItemAsync();
 
-        // Act
         var resultado = await _service.RegistrarRespostaAsync(
             briefingItem.Id,
             "Princesas"
         );
 
-        // Assert
         Assert.True(resultado);
 
-        var itemSalvo = await _context.BriefingItens
-            .FirstAsync(b => b.Id == briefingItem.Id);
+        var itemSalvo = await _testContext.BriefingItens
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.Id == briefingItem.Id);
 
+        Assert.NotNull(itemSalvo);
         Assert.Equal("Princesas", itemSalvo.Resposta);
+
+        _mockPedidoStatusService.Verify(
+            s => s.AvaliarStatusAsync(briefingItem.PedidoId),
+            Times.Once()
+        );
     }
 
     [Fact]
     public async Task RegistrarRespostaAsync_DeveRetornarFalse_QuandoBriefingItemNaoExiste()
     {
-        // Arrange
-        var idInexistente = Guid.NewGuid();
-
-        // Act
         var resultado = await _service.RegistrarRespostaAsync(
-            idInexistente,
+            Guid.NewGuid(),
             "Qualquer resposta"
         );
 
-        // Assert
         Assert.False(resultado);
-    }
 
-    // Método auxiliar opcional: limpar o contexto entre testes (caso precise em cenários mais complexos)
-     [Fact] public void Dispose() => _context.Dispose();
+        _mockPedidoStatusService.Verify(
+            s => s.AvaliarStatusAsync(It.IsAny<Guid>()),
+            Times.Never()
+        );
+    }
 }

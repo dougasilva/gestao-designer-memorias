@@ -25,7 +25,7 @@ public class PedidoStatusServiceTests
     private static PedidoTransicaoService CriarPedidoTransicaoService(AppDbContext context)
     {
         var timelineService = CriarPedidoTimelineService(context);
-        return new PedidoTransicaoService(context, timelineService);
+        return new PedidoTransicaoService(context);
     }
 
     [Fact]
