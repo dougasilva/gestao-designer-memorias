@@ -36,6 +36,7 @@ builder.Services.AddScoped<RegraPagamentoService>();
 builder.Services.AddScoped<BriefingInicializacaoService>();
 builder.Services.AddScoped<PedidoTimelineService>();
 builder.Services.AddScoped<PedidoTransicaoService>();
+builder.Services.AddScoped<PedidoTimelineQueryService>();
 
 var app = builder.Build();
 
