@@ -1,4 +1,5 @@
-﻿using GestaoDesignerMemorias.Domain.Enums;
+﻿using GestaoDesignerMemorias.Domain.Entities;
+using GestaoDesignerMemorias.Domain.Enums;
 using GestaoDesignerMemorias.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,7 @@ public class PedidoStatusService
         _transicaoService = transicaoService;
     }
 
-    public async Task<bool> AvaliarStatusAsync(Guid pedidoId)
+    public virtual async Task<bool> AvaliarStatusAsync(Guid pedidoId)
     {
         var pedido = await _context.Pedidos
             .Include(p => p.BriefingItens)
@@ -30,21 +31,14 @@ public class PedidoStatusService
 
         if (todosRespondidos && pedido.Status != StatusPedido.OrcamentoSolicitado)
         {
-            await _transicaoService.AlterarStatusAsync(
+            await _transicaoService.ExecutarAsync(
                 pedido.Id,
-                StatusPedido.OrcamentoSolicitado,
-                "Briefing completo"
+                AcaoPedido.BriefingConcluido,
+                "Briefing completo — orçamento solicitado"
             );
-
-            await _timelineService.RegistrarAsync(
-                pedido.Id,
-                "BriefingConcluido",
-                "Todas as perguntas respondidas. Status alterado para OrcamentoSolicitado"
-            );
-
-            await _context.SaveChangesAsync();
         }
 
         return true;
     }
+
 }
